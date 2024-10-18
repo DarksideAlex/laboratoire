@@ -266,6 +266,58 @@ const Editor = ({ setTexture }) => {
     image.src = src;
   };
 
+  const uploadImage = () => {
+    const drawingCanvasCtx = drawingCanvas.getContext('2d'); // Assuming drawingCanvas is already available
+    const postProcessingCanvasCtx = postProcessingCanvas.getContext('2d'); // Assuming postProcessingCanvas is available
+
+    // Create an input element for image upload
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+
+    // Trigger file selection when button is clicked
+    input.click();
+
+    // When a file is selected
+    input.onchange = (event) => {
+      const file = event.target.files[0];
+      if (file) {
+        const img = new Image();
+        const reader = new FileReader();
+
+        reader.onload = (e) => {
+          img.src = e.target.result;
+          img.onload = () => {
+            // Clear both the drawing and post-processing canvases
+            drawingCanvasCtx.clearRect(0, 0, drawingCanvasCtx.canvas.width, drawingCanvasCtx.canvas.height);
+            postProcessingCanvasCtx.clearRect(0, 0, postProcessingCanvasCtx.canvas.width, postProcessingCanvasCtx.canvas.height);
+
+            // Calculate the new image size while maintaining aspect ratio
+            const aspectRatio = img.width / img.height;
+            let newWidth = drawingCanvasCtx.canvas.width;
+            let newHeight = drawingCanvasCtx.canvas.height;
+
+            if (drawingCanvasCtx.canvas.width / drawingCanvasCtx.canvas.height > aspectRatio) {
+              // Adjust width to maintain aspect ratio if canvas is wider
+              newWidth = drawingCanvasCtx.canvas.height * aspectRatio;
+            } else {
+              // Adjust height if canvas is taller
+              newHeight = drawingCanvasCtx.canvas.width / aspectRatio;
+            }
+
+            // Draw the resized image on the drawing canvas
+            drawingCanvasCtx.drawImage(img, 0, 0, newWidth, newHeight);
+
+            // (Optional) You can apply any post-processing effects on the postProcessingCanvas here if needed.
+          };
+        };
+
+        reader.readAsDataURL(file);
+      }
+    };
+  };
+
+
   const clear = () => {
     const drawingCanvasCtx = drawingCanvas.getContext('2d');
     const postProcessingCanvasCtx = postProcessingCanvas.getContext('2d');
@@ -340,6 +392,7 @@ const Editor = ({ setTexture }) => {
           <div className="editor-buttons">
             <button onClick={clear}>Clear</button>
             <button onClick={save}>Save</button>
+            <button onClick={uploadImage}>Upload</button>
           </div>
         </div>
 
